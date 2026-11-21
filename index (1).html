@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>도쿄 여행 플래너</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 차분하고 실용적인 여행 수첩, 열면 바로 쓰는 도구
+   IDEA: 일본 열차 승차권(きっぷ)과 손글씨 여행 일정 수첩
+   PICTURE: 주황빛 도리이색 띠 위의 승차권 + 바로 아래 큰 시간표
+   COLOUR and TYPE: 종이 흰색, 먹색, 도리이 주홍 #d9432c, 보조 녹청 #2f6f6a / Do Hyeon + IBM Plex Sans KR
+   LAYOUT: 상단 띠(제목·승차권) → 날짜 탭 + 일정표 → 가고 싶은 곳 목록 */
+:root{color-scheme:light dark;
+--bg:light-dark(#fbfaf7,#141312);--card:light-dark(#ffffff,#1e1c1a);--ink:light-dark(#1b1a19,#efebe5);
+--mute:light-dark(#6b6660,#a59e95);--line:light-dark(#e6e1d9,#34302c);
+--red:light-dark(#d9432c,#e8604a);--redbg:light-dark(#d9432c,#7e2618);--teal:light-dark(#2f6f6a,#6fb3ac);--soft:light-dark(#fbeee9,#2a1d1a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans KR",system-ui,sans-serif;overflow-x:clip}
+h1,h2,.disp{font-family:"Do Hyeon","IBM Plex Sans KR",sans-serif;font-weight:400;line-height:1.05;text-wrap:balance;margin:0}
+.wrap{max-width:1040px;margin:0 auto}
+.band{padding:clamp(24px,4vw,52px) max(5vw,16px)}
+header.band{background:var(--redbg);color:#fff;padding-bottom:clamp(56px,7vw,84px)}
+header .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:28px;align-items:end}
+header h1{font-size:clamp(36px,6vw,52px)}
+header p{margin:10px 0 0;opacity:.9}
+.ticket{background:#fffaf2;color:#1b1a19;border-radius:14px;padding:16px 18px;position:relative;box-shadow:0 10px 24px rgba(0,0,0,.18);
+  -webkit-mask:radial-gradient(circle 9px at 0 62%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 62%,#0000 98%,#000) right/51% 100% no-repeat;
+  mask:radial-gradient(circle 9px at 0 62%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 62%,#0000 98%,#000) right/51% 100% no-repeat}
+.ticket .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ticket .code{font-family:"Do Hyeon",sans-serif;font-size:40px;line-height:1}
+.ticket .sm{font-size:13px;color:#6b6660}
+.ticket .arrow{flex:1;border-top:2px dashed #d9432c;position:relative;margin:0 6px}
+.ticket .arrow::after{content:"";position:absolute;right:-2px;top:-6px;border:5px solid transparent;border-left:8px solid #d9432c}
+.ticket hr{border:0;border-top:2px dashed #e1d8cc;margin:14px -18px 12px}
+.ticket .meta{display:flex;gap:18px;flex-wrap:wrap}
+.ticket .meta b{display:block;font-size:17px;white-space:nowrap}
+main{margin-top:calc(-1 * clamp(40px,5vw,60px))}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+.tabs{display:flex;gap:6px;padding:10px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{flex:1 0 auto;min-height:56px;border:0;border-radius:12px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;padding:6px 16px;text-align:left}
+.tab small{display:block;color:var(--mute);font-size:13px}
+.tab strong{font-family:"Do Hyeon",sans-serif;font-weight:400;font-size:22px}
+.tab[aria-selected=true]{background:var(--soft);box-shadow:inset 0 -3px 0 var(--red)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.day{padding:8px clamp(14px,3vw,28px) 22px}
+.dayhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0 6px}
+.dayhead h2{font-size:28px}
+ol.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:14px;padding:14px 0;border-top:1px solid var(--line);align-items:start}
+.tl li:first-child{border-top:0}
+.tl .t{font-family:"Do Hyeon",sans-serif;font-size:30px;line-height:1;color:var(--red);white-space:nowrap;padding-top:2px}
+.tl .t.none{font-size:15px;color:var(--mute);font-family:inherit;padding-top:6px}
+.tl h3{margin:0;font-size:18px;font-weight:700}
+.tl .where{color:var(--teal);font-size:14px;text-decoration:none}
+.tl .where:hover{text-decoration:underline}
+.tl p{margin:4px 0 0;color:var(--mute);font-size:15px;white-space:pre-wrap}
+.acts{display:flex;gap:4px}
+.ib{min-width:44px;min-height:44px;border:1px solid transparent;background:transparent;color:var(--mute);border-radius:10px;cursor:pointer;font:inherit;font-size:14px}
+.ib:hover{border-color:var(--line);color:var(--ink)}
+.btn{min-height:44px;border:0;border-radius:12px;background:var(--red);color:#fff;font:inherit;font-weight:700;padding:0 18px;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.empty{padding:26px 0;color:var(--mute);text-align:center}
+.sample{font-size:13px;color:var(--mute);margin:10px 0 0}
+section.band{padding-top:clamp(36px,5vw,60px)}
+.shead{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.shead h2{font-size:clamp(28px,4vw,36px)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{min-height:40px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:0 14px;font:inherit;font-size:15px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+.search{max-width:260px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.place{padding:16px;display:flex;flex-direction:column;gap:8px}
+.place.done{opacity:.6}
+.place.done h3{text-decoration:line-through}
+.place .top{display:flex;justify-content:space-between;gap:8px;align-items:start}
+.place h3{margin:0;font-size:18px}
+.tag{display:inline-block;font-size:13px;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--red);white-space:nowrap}
+.place p{margin:0;color:var(--mute);font-size:15px;white-space:pre-wrap}
+.place .bottom{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:6px;align-items:center}
+.place a.map{color:var(--teal);font-size:14px;min-height:44px;display:inline-flex;align-items:center;padding:0 6px}
+dialog{border:0;border-radius:18px;padding:0;background:var(--card);color:var(--ink);width:min(520px,calc(100vw - 24px));box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(20,15,10,.45)}
+dialog form{padding:22px;display:grid;gap:12px}
+dialog h2{font-size:26px}
+label{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:10px}
+.dlg-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140%);background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:12px;display:flex;gap:10px;align-items:center;transition:transform .25s;z-index:9;max-width:calc(100vw - 24px)}
+.toast.show{transform:translate(-50%,0)}
+.toast button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;min-height:36px;padding:0 10px;font:inherit;cursor:pointer}
+.status{font-size:13px;opacity:.85;margin-top:8px}
+footer{color:var(--mute);font-size:13px;text-align:center;padding:24px 16px 40px}
+@media(max-width:700px){header .wrap{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.tl li{grid-template-columns:62px minmax(0,1fr)}.tl .t{font-size:24px}.tl .acts{grid-column:2}.two{grid-template-columns:minmax(0,1fr)}.search{max-width:none}}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="wrap">
+    <div>
+      <h1 id="tripTitle">도쿄 2박 3일</h1>
+      <p id="tripSub">2026년 12월 3일(목) – 12월 5일(토)</p>
+      <div class="status" id="status">일정을 불러오는 중…</div>
+      <button class="btn ghost" id="share" style="margin-top:12px;color:#fff;border-color:rgba(255,255,255,.6)">공유 링크 복사</button>
+    </div>
+    <div class="ticket" aria-label="출국편">
+      <div class="row"><div><div class="code">GMP</div><div class="sm">김포</div></div><div class="arrow"></div><div style="text-align:right"><div class="code">HND</div><div class="sm">하네다</div></div></div>
+      <hr>
+      <div class="meta"><div><span class="sm">출발일</span><b>12.3 (목)</b></div><div><span class="sm">출발</span><b>07:45</b></div><div><span class="sm">귀국</span><b>12.5 (토)</b></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="band" id="gate" hidden style="padding-top:0;margin-top:calc(-1 * clamp(40px,5vw,60px))"><div class="wrap panel" style="padding:24px;display:grid;gap:12px;max-width:560px">
+  <h2 style="font-size:28px">여행 코드가 필요해요</h2>
+  <p style="margin:0;color:var(--mute)">공유받은 링크로 열거나, 받은 여행 코드를 입력해 주세요.</p>
+  <form id="gateForm" style="display:flex;gap:8px;flex-wrap:wrap"><input id="gateCode" placeholder="여행 코드" aria-label="여행 코드" style="flex:1 1 200px"><button class="btn">열기</button></form>
+  <button class="btn ghost" id="newTrip">새 여행 만들기</button>
+</div></div>
+<main class="band" style="padding-top:0" id="app">
+  <div class="wrap panel">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="day" id="day"></div>
+  </div>
+</main>
+
+<section class="band">
+  <div class="wrap">
+    <div class="shead">
+      <h2>가고 싶은 곳 · 맛집</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><input class="search" id="q" type="search" placeholder="이름·지역 검색" aria-label="검색"><button class="btn" id="addPlace">+ 장소 추가</button></div>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="places"></div>
+    <p class="sample">처음 들어 있는 장소와 일정 일부는 예시입니다. 수정하거나 지우고 직접 채워 주세요.</p>
+  </div>
+</section>
+<footer>이 링크를 가진 사람은 누구나 보고 고칠 수 있어요. 바뀐 내용은 몇 초 안에 모두에게 반영됩니다.</footer>
+
+<dialog id="dlgItem"><form method="dialog" id="fItem">
+  <h2 id="dlgItemTitle">일정 추가</h2>
+  <div class="two"><label>시간<input type="time" name="time"></label><label>할 일<input name="title" required placeholder="예: 아사쿠사 산책"></label></div>
+  <label>장소 (지도 검색어)<input name="place" placeholder="예: 浅草寺 또는 Senso-ji"></label>
+  <label>메모<textarea name="memo" rows="3" placeholder="예약 번호, 이동 방법 등"></textarea></label>
+  <div class="dlg-acts"><button type="button" class="btn ghost" data-close>취소</button><button class="btn" value="ok">저장</button></div>
+</form></dialog>
+
+<dialog id="dlgPlace"><form method="dialog" id="fPlace">
+  <h2 id="dlgPlaceTitle">장소 추가</h2>
+  <label>이름<input name="name" required placeholder="예: 츠키지 장외시장"></label>
+  <div class="two"><label>분류<select name="cat"></select></label><label>지역<input name="area" placeholder="예: 긴자"></label></div>
+  <label>메모<textarea name="memo" rows="3" placeholder="먹고 싶은 메뉴, 영업시간 등"></textarea></label>
+  <div class="dlg-acts"><button type="button" class="btn ghost" data-close>취소</button><button class="btn" value="ok">저장</button></div>
+</form></dialog>
+
+<dialog id="dlgAdd"><form method="dialog" id="fAdd">
+  <h2>일정에 넣기</h2>
+  <div class="two"><label>날짜<select name="day"></select></label><label>시간<input type="time" name="time"></label></div>
+  <div class="dlg-acts"><button type="button" class="btn ghost" data-close>취소</button><button class="btn" value="ok">넣기</button></div>
+</form></dialog>
+
+<div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="undo">되돌리기</button></div>
+
+<script>
+{
+const SB_URL='https://wldxeptazknekqpwfkmb.supabase.co';
+const SB_KEY='sb_publishable_ZEyKVfCY_xjRQ5oOwrIkMg_2euK_D-q';
+const START='2026-12-03',NDAYS=3;
+const CATS=['관광','맛집','카페','쇼핑','기타'];
+const WD=['일','월','화','수','목','금','토'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const mapUrl=q=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+
+let code=(location.hash||'').slice(1).trim();
+let rows=[];            // [{id,kind,data}]
+let lastJson='';
+let filter='전체',query='',cur=lsGet('tokyo-day')||START,undoOps=null,busy=0;
+
+async function rpc(fn,body){
+  const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error(fn+' '+r.status);
+  const t=await r.text();return t?JSON.parse(t):null}
+const apiList=()=>rpc('trip_list',{p_trip:code});
+const apiPut=(id,kind,data)=>rpc('trip_upsert',{p_trip:code,p_id:id,p_kind:kind,p_data:data});
+const apiDel=id=>rpc('trip_delete',{p_trip:code,p_id:id});
+
+function dayKeys(){const out=[];const d=new Date(START+'T00:00:00');for(let i=0;i<NDAYS;i++){const x=new Date(d);x.setDate(d.getDate()+i);out.push(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'))}return out}
+function label(k){const d=new Date(k+'T00:00:00');return {md:(d.getMonth()+1)+'.'+d.getDate(),wd:WD[d.getDay()]}}
+const events=k=>rows.filter(r=>r.kind==='event'&&r.data.day===k).sort((a,b)=>(a.data.time||'99')<(b.data.time||'99')?-1:1);
+const places=()=>rows.filter(r=>r.kind==='place').sort((a,b)=>(b.data.order||0)-(a.data.order||0));
+const find=id=>rows.find(r=>r.id===id);
+
+function renderTabs(){const ks=dayKeys();if(!ks.includes(cur))cur=ks[0];
+  $('#tabs').innerHTML=ks.map((k,i)=>{const l=label(k);return `<button class="tab" role="tab" id="tab-${k}" aria-selected="${k===cur}" data-k="${k}"><small>Day ${i+1} · ${events(k).length}개</small><strong>${l.md} (${l.wd})</strong></button>`}).join('')}
+function renderDay(){const k=cur,l=label(k),items=events(k),i=dayKeys().indexOf(k);
+  $('#day').innerHTML=`<div class="dayhead"><h2>Day ${i+1} · ${l.md} ${l.wd}요일</h2><button class="btn" id="addItem">+ 일정 추가</button></div>`+
+  (items.length?`<ol class="tl">${items.map(({id,data:it})=>`<li><div class="t ${it.time?'':'none'}">${it.time?esc(it.time):'시간 미정'}</div><div><h3>${esc(it.title)}</h3>${it.place?`<a class="where" href="${mapUrl(it.place)}" target="_blank" rel="noopener">지도에서 보기 · ${esc(it.place)}</a>`:''}${it.memo?`<p>${esc(it.memo)}</p>`:''}</div><div class="acts"><button class="ib" data-edit="${esc(id)}">수정</button><button class="ib" data-del="${esc(id)}">삭제</button></div></li>`).join('')}</ol>`
+  :`<div class="empty">아직 일정이 없어요. 아래 ‘가고 싶은 곳’에서 넣거나 직접 추가해 보세요.</div>`)}
+function renderFilters(){const ps=places(),counts={전체:ps.length};CATS.forEach(c=>counts[c]=ps.filter(p=>p.data.cat===c).length);
+  $('#filters').innerHTML=['전체',...CATS].filter(c=>c==='전체'||counts[c]).map(c=>`<button class="chip" aria-pressed="${c===filter}" data-f="${c}">${c} ${counts[c]}</button>`).join('')}
+function renderPlaces(){const q=query.trim().toLowerCase(),all=places();
+  const list=all.filter(({data:p})=>(filter==='전체'||p.cat===filter)&&(!q||(p.name+' '+(p.area||'')+' '+(p.memo||'')).toLowerCase().includes(q)));
+  $('#places').innerHTML=list.length?list.map(({id,data:p})=>`<article class="panel place ${p.done?'done':''}"><div class="top"><h3>${esc(p.name)}</h3><span class="tag">${esc(p.cat)}</span></div>${p.area?`<div style="font-size:14px">${esc(p.area)}</div>`:''}${p.memo?`<p>${esc(p.memo)}</p>`:''}<div class="bottom"><a class="map" href="${mapUrl(p.name+' '+(p.area||'')+' 東京')}" target="_blank" rel="noopener">지도</a><button class="ib" data-sched="${esc(id)}">일정에 넣기</button><button class="ib" data-done="${esc(id)}">${p.done?'안 간 걸로':'다녀옴'}</button><button class="ib" data-pedit="${esc(id)}">수정</button><button class="ib" data-pdel="${esc(id)}">삭제</button></div></article>`).join('')
+  :`<div class="empty" style="grid-column:1/-1">${all.length?'조건에 맞는 장소가 없어요.':'가고 싶은 곳을 추가해 보세요.'}</div>`}
+function render(){renderTabs();renderDay();renderFilters();renderPlaces()}
+
+function setStatus(t){$('#status').textContent=t}
+function toast(m,undoable){$('#toastMsg').textContent=m;$('#undo').hidden=!undoable;$('#toast').classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').classList.remove('show'),4000)}
+
+// 변경 적용: ops = [{op:'put',id,kind,data}|{op:'del',id}]
+async function apply(ops,msg,undoable){
+  const inverse=ops.map(o=>{const old=find(o.id);return old?{op:'put',id:old.id,kind:old.kind,data:old.data}:{op:'del',id:o.id}}).reverse();
+  for(const o of ops){rows=rows.filter(r=>r.id!==o.id);if(o.op==='put')rows.push({id:o.id,kind:o.kind,data:o.data})}
+  render();undoOps=undoable?inverse:null;if(msg)toast(msg,undoable);
+  busy++;setStatus('저장 중…');
+  try{for(const o of ops){o.op==='put'?await apiPut(o.id,o.kind,o.data):await apiDel(o.id)}
+    setStatus('저장됨 · 같이 쓰는 사람에게도 반영돼요');cache()}
+  catch(e){setStatus('저장 실패 · 인터넷 연결을 확인해 주세요');await refresh(true)}
+  finally{busy--}}
+function cache(){lastJson=JSON.stringify(rows);lsSet('trip-cache-'+code,lastJson)}
+
+async function refresh(force){
+  if(!code||(busy&&!force)||document.querySelector('dialog[open]'))return;
+  try{const data=await apiList();const next=(data||[]).map(r=>({id:r.id,kind:r.kind,data:r.data}));const j=JSON.stringify(next);
+    if(j!==lastJson){rows=next;lastJson=j;lsSet('trip-cache-'+code,j);render()}
+    setStatus('최신 상태 · 같이 쓰는 사람과 공유돼요')}
+  catch(e){setStatus('서버에 연결하지 못했어요 · 저장된 내용을 보여드려요')}}
+
+// dialogs
+let editId=null,editPid=null,schedPid=null;
+function openItem(r){editId=r?r.id:null;const f=$('#fItem').elements,it=r?r.data:{};$('#dlgItemTitle').textContent=r?'일정 수정':'일정 추가';
+  f.time.value=it.time||'';f.title.value=it.title||'';f.place.value=it.place||'';f.memo.value=it.memo||'';$('#dlgItem').showModal();f.title.focus()}
+function openPlace(r){editPid=r?r.id:null;const f=$('#fPlace').elements,p=r?r.data:{};$('#dlgPlaceTitle').textContent=r?'장소 수정':'장소 추가';
+  f.name.value=p.name||'';f.cat.value=p.cat||(filter!=='전체'?filter:'관광');f.area.value=p.area||'';f.memo.value=p.memo||'';$('#dlgPlace').showModal();f.name.focus()}
+$('#fPlace').elements.cat.innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+
+$('#fItem').addEventListener('submit',e=>{if(e.submitter?.value!=='ok')return;const f=e.target.elements;
+  const old=editId?find(editId):null;
+  const d={day:old?old.data.day:cur,time:f.time.value,title:f.title.value.trim(),place:f.place.value.trim(),memo:f.memo.value.trim()};if(!d.title){e.preventDefault();return}
+  apply([{op:'put',id:editId||uid(),kind:'event',data:d}],editId?'일정을 수정했어요':'일정을 추가했어요',true)});
+$('#fPlace').addEventListener('submit',e=>{if(e.submitter?.value!=='ok')return;const f=e.target.elements;
+  const old=editPid?find(editPid):null;
+  const d={name:f.name.value.trim(),cat:f.cat.value,area:f.area.value.trim(),memo:f.memo.value.trim(),done:old?!!old.data.done:false,order:old?old.data.order:Date.now()};if(!d.name){e.preventDefault();return}
+  apply([{op:'put',id:editPid||uid(),kind:'place',data:d}],editPid?'장소를 수정했어요':'장소를 추가했어요',true)});
+$('#fAdd').addEventListener('submit',e=>{if(e.submitter?.value!=='ok')return;const f=e.target.elements,r=find(schedPid);if(!r)return;const p=r.data;
+  cur=f.day.value;lsSet('tokyo-day',cur);
+  apply([{op:'put',id:uid(),kind:'event',data:{day:cur,time:f.time.value,title:p.name,place:p.name+(p.area?' '+p.area:''),memo:p.memo||''}}],label(cur).md+' 일정에 넣었어요',true)});
+
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;cur=b.dataset.k;lsSet('tokyo-day',cur);renderTabs();renderDay()});
+$('#tabs').addEventListener('keydown',e=>{if(!/Arrow(Left|Right)/.test(e.key))return;const ks=dayKeys();let i=ks.indexOf(cur)+(e.key==='ArrowRight'?1:-1);i=(i+ks.length)%ks.length;cur=ks[i];renderTabs();renderDay();$('#tab-'+cur).focus()});
+$('#day').addEventListener('click',e=>{const ds=e.target.dataset;
+  if(e.target.id==='addItem')openItem(null);
+  else if(ds.edit)openItem(find(ds.edit));
+  else if(ds.del)apply([{op:'del',id:ds.del}],'일정을 지웠어요',true)});
+$('#places').addEventListener('click',e=>{const ds=e.target.dataset;
+  if(ds.pedit)openPlace(find(ds.pedit));
+  else if(ds.pdel)apply([{op:'del',id:ds.pdel}],'장소를 지웠어요',true);
+  else if(ds.done){const r=find(ds.done);apply([{op:'put',id:r.id,kind:'place',data:{...r.data,done:!r.data.done}}],r.data.done?'표시를 풀었어요':'다녀온 곳으로 표시했어요',true)}
+  else if(ds.sched){schedPid=ds.sched;const f=$('#fAdd').elements;f.day.innerHTML=dayKeys().map((k,i)=>`<option value="${k}" ${k===cur?'selected':''}>Day ${i+1} · ${label(k).md} (${label(k).wd})</option>`).join('');f.time.value='';$('#dlgAdd').showModal()}});
+$('#filters').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;filter=b.dataset.f;renderFilters();renderPlaces()});
+$('#q').addEventListener('input',e=>{query=e.target.value;renderPlaces()});
+$('#addPlace').addEventListener('click',()=>openPlace(null));
+$('#undo').addEventListener('click',()=>{if(!undoOps)return;const ops=undoOps;undoOps=null;apply(ops,'되돌렸어요',false)});
+$('#share').addEventListener('click',async()=>{const link=location.href.split('#')[0]+'#'+code;
+  try{await navigator.clipboard.writeText(link);toast('공유 링크를 복사했어요',false)}catch(e){toast('복사하지 못했어요 · 주소창의 링크를 그대로 보내 주세요',false)}});
+
+// 여행 코드 화면
+function showGate(on){$('#gate').hidden=!on;$('#app').hidden=on;document.querySelector('section.band').hidden=on;$('#share').hidden=on;if(on)setStatus('여행 코드가 있는 링크로 열어 주세요')}
+$('#gateForm').addEventListener('submit',e=>{e.preventDefault();const v=$('#gateCode').value.trim().replace(/^.*#/,'');if(v.length<16){toast('여행 코드가 너무 짧아요',false);return}location.hash=v});
+$('#newTrip').addEventListener('click',()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789',b=new Uint32Array(24);crypto.getRandomValues(b);location.hash=Array.from(b,x=>a[x%a.length]).join('')});
+function start(){code=(location.hash||'').slice(1).trim();rows=[];lastJson='';
+  if(code.length<16){showGate(true);return}
+  showGate(false);
+  const c=lsGet('trip-cache-'+code);if(c){try{rows=JSON.parse(c);lastJson=c}catch(e){}}
+  render();refresh(true)}
+window.addEventListener('hashchange',start);
+setInterval(()=>{if(document.visibilityState==='visible')refresh()},8000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh()});
+start();
+}
+</script>
+</body>
+</html>
